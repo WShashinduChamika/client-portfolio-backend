@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import serverless from 'serverless-http';
 import { connectDB, disconnectDB } from './config/db-config.js';
 import { userRoutes } from './routes/user-routes.js';
 import { blogRoutes } from './routes/blog-routes.js';
@@ -18,9 +19,17 @@ connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
+  .split(/[;,|]/)
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+if (allowedOrigins.length === 0) {
+  allowedOrigins.push('http://localhost:3000', 'http://localhost:3001');
+}
 
 // Middleware
-app.use(cors({ origin: process.env.CLIENT_URL ? [process.env.CLIENT_URL] : ['http://localhost:3000', 'http://localhost:3001'], credentials: true }));
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -58,25 +67,40 @@ app.use((req, res) => {
   });
 });
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`📍 Local: http://localhost:${PORT}`);
-});
+// Start server only when run directly (local dev); export handler for serverless
+let server;
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  server = app.listen(PORT, () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
+    console.log(`📍 Local: http://localhost:${PORT}`);
+  });
+}
+
+export const handler = serverless(app);
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM signal received: closing HTTP server');
-  server.close(async () => {
+  if (server) {
+    server.close(async () => {
+      await disconnectDB();
+      process.exit(0);
+    });
+  } else {
     await disconnectDB();
     process.exit(0);
-  });
+  }
 });
 
 process.on('SIGINT', async () => {
   console.log('\nSIGINT signal received: closing HTTP server');
-  server.close(async () => {
+  if (server) {
+    server.close(async () => {
+      await disconnectDB();
+      process.exit(0);
+    });
+  } else {
     await disconnectDB();
     process.exit(0);
-  });
+  }
 });
