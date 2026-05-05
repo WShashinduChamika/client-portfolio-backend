@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
 import { sendErrorResponse } from "../utils/response-util.js";
+import { BLOG_UPLOAD_DIR } from "../utils/upload-path.js";
 
-const UPLOAD_DIR = "uploads/blogs";
 const MAX_BODY_BYTES = 10 * 1024 * 1024; // 10 MB overall body
 const MAX_FILE_BYTES = 5 * 1024 * 1024;  // 5 MB per file
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
@@ -14,8 +14,8 @@ const MIME_TO_EXT = {
   "image/gif": ".gif",
 };
 
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+if (!fs.existsSync(BLOG_UPLOAD_DIR)) {
+  fs.mkdirSync(BLOG_UPLOAD_DIR, { recursive: true });
 }
 
 /**
@@ -110,9 +110,9 @@ export const parseMultipart = (req, res, next) => {
 
           const ext = MIME_TO_EXT[mime];
           const savedFilename = `blog-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-          const filePath = path.join(UPLOAD_DIR, savedFilename).replace(/\\/g, "/");
+          const filePath = path.join(BLOG_UPLOAD_DIR, savedFilename).replace(/\\/g, "/");
           fs.writeFileSync(filePath, bodySlice);
-          savedFile = { filename: savedFilename, path: filePath, url: `/${filePath}` };
+          savedFile = { filename: savedFilename, path: filePath, url: `/uploads/blogs/${savedFilename}` };
         } else {
           fields[fieldName] = bodySlice.toString();
         }

@@ -8,6 +8,7 @@ import serverless from 'serverless-http';
 import { connectDB, disconnectDB } from './config/db-config.js';
 import { userRoutes } from './routes/user-routes.js';
 import { blogRoutes } from './routes/blog-routes.js';
+import { UPLOAD_ROOT } from './utils/upload-path.js';
 
 dotenv.config();
 
@@ -35,7 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Serve uploaded files as static assets
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(UPLOAD_ROOT));
 
 // Root route
 app.get('/', (req, res) => {

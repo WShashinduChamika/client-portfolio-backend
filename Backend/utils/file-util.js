@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { UPLOAD_ROOT } from "./upload-path.js";
 
 /**
  * Deletes a file from the filesystem given its stored URL path.
@@ -11,7 +12,7 @@ export const deleteFile = (filePath) => {
   try {
     // Strip leading slash and resolve against the project root (Backend/)
     const relativePath = filePath.startsWith("/") ? filePath.slice(1) : filePath;
-    const absolutePath = path.resolve(relativePath);
+    const absolutePath = path.resolve(relativePath.startsWith("uploads/") ? path.join(UPLOAD_ROOT, relativePath.slice("uploads/".length)) : relativePath);
     if (fs.existsSync(absolutePath)) {
       fs.unlinkSync(absolutePath);
     }
