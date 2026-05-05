@@ -77,7 +77,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   });
 }
 
-export const handler = serverless(app);
+const handler = serverless(app);
+export default handler;
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

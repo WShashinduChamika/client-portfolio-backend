@@ -16,7 +16,12 @@ const options = {
 
 export const connectDB = async () => {
     try {
-        const conn = await mongoose.connect(process.env.MONGO_URI, options);
+        const mongoUri = process.env.MONGO_URI;
+        if (!mongoUri) {
+            throw new Error('Missing required environment variable MONGO_URI');
+        }
+
+        const conn = await mongoose.connect(mongoUri, options);
         
         console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
         console.log(`📦 Database: ${conn.connection.name}`);
@@ -36,7 +41,7 @@ export const connectDB = async () => {
         
     } catch (err) {
         console.error('❌ MongoDB connection failed:', err.message);
-        process.exit(1);
+        throw err;
     }
 };
 
